@@ -35,6 +35,23 @@ def page2():
     ineps = st.number_input("Enter the eps:", min_value=0.0, step=0.1)
     if file is not None:
         df_sources = pd.read_excel(file, sheet_name='CO2 sources')  
+        # Normalise column names
+df_sources.columns = df_sources.columns.str.strip()
+
+# Allow common variants
+emission_col_candidates = ["Emission", "Emissions", "CO2 Emission", "CO2 Emissions", "emission", "emissions"]
+emission_col = next((c for c in emission_col_candidates if c in df_sources.columns), None)
+
+if emission_col is None:
+    st.error(
+        "Missing emissions column in 'CO2 sources' sheet. "
+        "Expected a column named 'Emission' (or a common variant like 'Emissions'). "
+        f"Found columns: {list(df_sources.columns)}"
+    )
+    st.stop()
+
+df_sources["Total Emitted"] = df_sources[emission_col]
+
         df_sinks = pd.read_excel(file, sheet_name='CO2 sinks')  
         df_pipelines = pd.read_excel(file, sheet_name='pipeline')
         return df_sources, df_sinks, df_pipelines, ineps 
